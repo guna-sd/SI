@@ -1,3 +1,5 @@
+# SI
+
 Shell Intelligence (SI) is a command-line interface that receives user input in natural language or simplified command format. It follows a series of steps to process the input, interpret the user's intent, and execute the appropriate actions. SI focuses on error handling, interaction with external tools, continuous improvement, and providing an efficient and user-friendly command-line experience.
 
 SI receives user input in natural language or simplified command format. The input is then preprocessed, extracting relevant information and performing language processing tasks like tokenization, part-of-speech tagging, and named entity recognition. This allows SI to understand the user's intent and extract important keywords.
