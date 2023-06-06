@@ -1,10 +1,9 @@
-# SI
 
 Shell Intelligence (SI) is a command-line interface that receives user input in natural language or simplified command format. It follows a series of steps to process the input, interpret the user's intent, and execute the appropriate actions. SI focuses on error handling, interaction with external tools, continuous improvement, and providing an efficient and user-friendly command-line experience.
 
-SI receives user input in natural language or simplified command format. The input is then preprocessed, extracting relevant information and performing language processing tasks like tokenization, part-of-speech tagging, and named entity recognition. This allows SI to understand the user's intent and extract important keywords.
+SI receives user input in natural language or simplified command format. The input is then preprocessed, extracting relevant information and performing language processing tasks like tokenization. This allows SI to understand the user's intent and extract important keywords.
 
-The next step is command interpretation and mapping, where SI interprets the user's command or intent based on the extracted information. It maps the interpreted command to a specific action or set of actions to be performed. This process utilizes predefined rules, machine learning models, and domain-specific knowledge to accurately interpret and map commands.
+The next step is command interpretation and mapping, where SI interprets the user's command or intent based on the extracted information. It maps the interpreted command to a specific action or set of actions to be performed. This process utilizes predefined rules, machine learning models, and domain-specific knowledge to accurately interpret and map commands.This can be achieved by fine-tuning pre-trained large language models(LLMs).
 
 Error handling and exception management are important aspects of the SI shell. It implements error handling mechanisms to catch and handle exceptions that may occur during command execution. In case of errors, the SI shell provides meaningful feedback to the user, suggesting possible solutions or alternative actions.
 
