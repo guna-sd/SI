@@ -1,1 +1,4 @@
-cutomtkinter
+cutomtkinter == '5.1.3'
+pytorch 
+nltk
+urllib
