@@ -1,4 +1,12 @@
-# Shell Intelligence (SI)
+# Shell Intelligence (SI) 
+
+
+    ╔══╗      ╔╗ ╔══╗   ╔╗
+    ║╔╗║      ║║ ║╔╗║  ╔╝╚╗
+    ║╚╝╚╦══╦══╣╚═╣╚╝╚╦═╩╗╔╝
+    ║╔═╗║╔╗║══╣╔╗║╔═╗║╔╗║║
+    ║╚═╝║╔╗╠══║║║║╚═╝║╚╝║╚╗
+    ╚═══╩╝╚╩══╩╝╚╩═══╩══╩═╝    
 
 
 Welcome to Shell Intelligence (SI)!
