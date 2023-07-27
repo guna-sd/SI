@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import math
+
 class GPT2Config:
     def __init__(self):
         self.vocab_size = 50257
@@ -15,7 +16,7 @@ class GPT2Config:
         self.attn_pdrop = 0.1
         self.layer_norm_epsilon = 1e-5
         self.initializer_range = 0.
-        self.output_attentions = False          
+        self.output_attentions = False 
 class GPT2Model(nn.Module):
     def __init__(self, config):
         super(GPT2Model, self).__init__()
@@ -49,6 +50,7 @@ class GPT2Model(nn.Module):
         hidden_states = self.ln_f(hidden_states)
         output_shape = input_shape + (hidden_states.size(-1),)
         return hidden_states.view(*output_shape), presents
+        
 class GPT2Block(nn.Module):
     def __init__(self, config):
         super(GPT2Block, self).__init__()
@@ -63,6 +65,7 @@ class GPT2Block(nn.Module):
         m = self.mlp(self.ln_2(x))
         x = x + m
         return x, present
+        
 class GPT2Attention(nn.Module):
     def __init__(self, config):
         super(GPT2Attention, self).__init__()
@@ -107,10 +110,9 @@ class GPT2Attention(nn.Module):
         attn_output = self._attn(query, key, value)
         attn_output = self.merge_heads(attn_output)
         attn_output = self.c_proj(attn_output)
-        # Apply bias
         attn_output += self.bias
         attn_output = self.resid_dropout(attn_output)
-        return attn_output, present
+        return attn_output, present 
 class GPT2MLP(nn.Module):
     def __init__(self, config):
         super(GPT2MLP, self).__init__()
@@ -122,6 +124,7 @@ class GPT2MLP(nn.Module):
         h = self.act(self.c_fc(x))
         h2 = self.c_proj(h)
         return self.dropout(h2)
+        
 class Conv1D(nn.Module):
     def __init__(self, nf, nx):
         super(Conv1D, self).__init__()
@@ -130,12 +133,9 @@ class Conv1D(nn.Module):
         nn.init.normal_(w, std=0.02)
         self.weight = nn.Parameter(w)
         self.bias = nn.Parameter(torch.zeros(nf))
-
     def forward(self, x):
         size_out = x.size()[:-1] + (self.nf,)
         x = torch.addmm(self.bias, x.view(-1, x.size(-1)), self.weight)
         x = x.view(*size_out)
         return x
-
-
-
+        
