@@ -39,17 +39,17 @@ Here are some examples of how to use SI:
 
 - Set the default text editor to "gedit":
 ```
-SI: Set the default text editor to gedit.
+$!> Set the default text editor to gedit.
 ```
 
 - Configure the Linux firewall to allow all incoming TCP traffic on port 80:
 ```
-SI: Configure the Linux firewall to allow all incoming TCP traffic on port 80.
+$!> Configure the Linux firewall to allow all incoming TCP traffic on port 80.
 ```
 
 - Generate a report of running processes:
 ```
-SI: Generate a report of running processes.
+$!> Generate a report of running processes.
 ```
 
 ## Limitations
