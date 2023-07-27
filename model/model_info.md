@@ -19,6 +19,6 @@ To use the fine-tuned GPT-2 model, you can follow the instructions below:
 Contributions to this project are welcome! If you find any issues or want to add new features, feel free to create a pull request.
 
 ## Contact Information
-For any questions or inquiries, you can reach out to Gunasekar at [sdgunaseker@gmail.com].
+For any questions or inquiries, you can reach out to Gunasekar at [shellbotquery@gmail.com].
 
 Thank you for checking out this project! I hope you find it useful and informative.
