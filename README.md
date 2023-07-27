@@ -9,30 +9,63 @@
     ╚═══╩╝╚╩══╩╝╚╩═══╩══╩═╝    
 
 
-Welcome to Shell Intelligence (SI)!
+### Shell Intelligence (SI)
 
-Are you tired of grappling with complex Linux commands and struggling to decipher cryptic error messages? Say hello to SI, your trusted companion for effortless Linux interactions. SI is an innovative tool that leverages cutting-edge Natural Language Processing (NLP) and Artificial Intelligence (AI) technologies to bring a whole new level of accessibility and enjoyment to the Linux experience.
+Shell Intelligence (SI) is an innovative tool that combines natural language processing (NLP) and artificial intelligence (AI) to enhance the user experience of the command-line interface (CLI) in Linux. SI enables users to interact with Linux using plain English instead of having to use complex commands.
 
-Why Choose SI?
+## Features
 
-  Converse with Linux Like a Friend: Bid farewell to the complexities of syntax and the need to memorize obscure commands. SI empowers you to interact with Linux using plain English. Express your intentions naturally, and watch as SI promptly executes your commands. Whether you're a beginner or a seasoned Linux user, SI makes Linux remarkably user-friendly.
+- **Natural Language Processing**: SI understands natural language input and translates it into executable commands, making Linux more accessible to a wider audience.
 
-  Seamless Scripting and Automation: Break free from the misconception that coding is reserved for experts. With SI, scripting and automation become accessible to anyone. Express your logical constructs in natural language, and SI will seamlessly translate them into executable code. Unleash your creativity and innovation within the Linux ecosystem with SI's groundbreaking features.
+- **Simplified Command Execution**: SI simplifies command execution by allowing users to interact with Linux effortlessly using natural language.
 
-  Intuitive Natural Language Reporting: SI goes beyond simple command execution by generating comprehensive reports in plain English. Need insights on system performance or disk usage? Simply request a report, and SI will provide easily understandable, detailed insights. Say goodbye to struggling with complex data manipulation or visualization tools. SI simplifies information consumption for informed decision-making.
+- **Effortless Scripting and Automation**: SI offers advanced features for effortless scripting and automation, making repetitive tasks more efficient.
 
-  Effortless File Summarization: SI offers an extraordinary file summarization feature for Linux users. Whether you require a quick overview of a lengthy document or a summary of intricate code, SI's intelligent algorithms extract essential information and present it in a clear and concise format. Save time and make intelligent decisions with SI's file summarization capabilities.
+- **Human-Readable Reports**: SI generates reports in plain English, enhancing the understandability of command output.
 
-   Intelligent Error Handling: Dealing with errors can be exasperating, but SI is here to assist. If you encounter an unrecognized command or make a mistake, SI offers constructive feedback and suggestions. SI acts as a knowledgeable and supportive assistant, effortlessly guiding you through Linux.
+- **Intelligent Error Handling**: SI provides context-aware error messages and suggestions to help troubleshoot problems effectively.
 
-Getting Started with SI
+## Getting Started
 
-To start your journey with SI, follow these simple steps:
+To use Shell Intelligence (SI), follow these steps:
 
-   Install SI by running the setup script available in this repository.
-   Launch SI in your terminal, and it will greet you warmly.
-   Ask SI anything in plain English! Explore its features, execute commands, and experience the power of natural language interactions with Linux.
+1. Install SI on your Linux system.
+2. Launch the SI CLI by running the command `si`.
+3. Start interacting with Linux using natural language commands.
 
-Acknowledgments
+## Example Usage
 
-Discover the future of Linux interactions with SI! Embrace the power of natural language and unlock the full potential of Linux without any technical barriers.
+Here are some examples of how to use SI:
+
+- Set the default text editor to "gedit":
+```
+SI: Set the default text editor to gedit.
+```
+
+- Configure the Linux firewall to allow all incoming TCP traffic on port 80:
+```
+SI: Configure the Linux firewall to allow all incoming TCP traffic on port 80.
+```
+
+- Generate a report of running processes:
+```
+SI: Generate a report of running processes.
+```
+
+## Limitations
+
+While SI offers significant advantages in terms of usability and accessibility, it may have some limitations:
+
+- **Language Understanding**: SI's natural language processing capabilities may not be perfect, leading to occasional misinterpretations of commands.
+
+- **Context Sensitivity**: SI's understanding of context may be limited, resulting in inaccuracies when dealing with complex instructions.
+
+- **Dependency on Language Models**: SI's performance relies on the underlying language model [GPT2], and updates to language models may impact its behavior.
+
+## Contributing
+
+We welcome contributions to improve SI and make it even more powerful and user-friendly. If you would like to contribute, please follow the guidelines outlined in CONTRIBUTING.md.
+
+## Contact
+
+If you have any questions, suggestions, or feedback, please reach out to us at [shellbotquery@gmail.com].
