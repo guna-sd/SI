@@ -64,8 +64,8 @@ While SI offers significant advantages in terms of usability and accessibility, 
 
 ## Contributing
 
-We welcome contributions to improve SI and make it even more powerful and user-friendly. If you would like to contribute, please follow the guidelines outlined in CONTRIBUTING.md.
+ I am eager to welcome any valuable contributions to improve SI and make it even more powerful and user-friendly.
 
 ## Contact
 
-If you have any questions, suggestions, or feedback, please reach out to us at [shellbotquery@gmail.com].
+If you have any questions, suggestions, or feedback, please reach me out on [shellbotquery@gmail.com].
