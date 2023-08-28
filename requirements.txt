@@ -1,4 +1,8 @@
-pytorch 
-python
+pytorch
+tiktoken #optional
+safetensors #optional
+numpy
+pandas
+nltk
 
 
