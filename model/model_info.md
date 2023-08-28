@@ -7,8 +7,8 @@ SHELL-INTELLIGENCE [si]
 This repository contains a fine-tuned GPT-2 [124] model implemented using the PyTorch framework.
 
 ## File Descriptions
-1. `model.bin`: This file contains the fine-tuned GPT-2 model with a size of 124M.
-2. `architecture`: The implementation of the GPT-2 model using the PyTorch library.
+1. `architecture`: The implementation of the GPT-2 model using the PyTorch library refered from nanogpt and tranformers implementation of gpt2.
+2. `encoder`: The model uses either tiktoken or custom bpe-encoding from openai.
 
 ## Usage
 To use the fine-tuned GPT-2 model, you can follow the instructions below:
