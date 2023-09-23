@@ -69,3 +69,6 @@ While SI offers significant advantages in terms of usability and accessibility, 
 ## Contact
 
 If you have any questions, suggestions, or feedback, please reach me out on [shellbotquery@gmail.com].
+
+## development
+This project is still under development.
