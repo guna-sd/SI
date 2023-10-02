@@ -60,7 +60,7 @@ While SI offers significant advantages in terms of usability and accessibility, 
 
 - **Context Sensitivity**: SI's understanding of context may be limited, resulting in inaccuracies when dealing with complex instructions.
 
-- **Dependency on Language Models**: SI's performance relies on the underlying language model [gpt2](https://github.com/guna-sd/SI/blob/a17f9548df537fb9e051edf1967dc98213602399/model/model_info.md) and [llama2], and updates to language models may impact its behavior.
+- **Dependency on Language Models**: SI's performance relies on the underlying language model [llama2](https://github.com/guna-sd/SI/blob/main/model/model_info.md), and updates to language models may impact its behavior.
 
 ## Contributing
 
@@ -68,7 +68,7 @@ While SI offers significant advantages in terms of usability and accessibility, 
 
 ## Contact
 
-If you have any questions, suggestions, or feedback, please reach me out on [shellbotquery@gmail.com].
+If you have any questions, suggestions, or feedback, please reach me out on [shellbotquery@gmail.com](shellbotquery@gmail.com).
 
 ## development
 This project is still under development.
