@@ -38,7 +38,3 @@ def get_package_version(pkg_name: str) -> str: # type: ignore
     """
     if is_package_available(pkg_name):
         return f'{pkg_name} found [installed] and version is {metadata.version(pkg_name)}'
-    
-if __name__ == '__main__':
-    print(get_package_version('torch'))
-    print(is_package_available("requests"))
