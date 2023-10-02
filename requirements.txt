@@ -1,8 +1,3 @@
-pytorch
-tiktoken #optional
-safetensors #optional
-numpy
-pandas
-nltk
-
-
+llama-cpp-python
+rich
+requests
