@@ -1,24 +1,24 @@
-# Model Info
+#  Model Info
 
-## Project Name
-SHELL-INTELLIGENCE [si]
+### Project Name
+[SHELL-INTELLIGENCE](https://github.com/guna-sd/SI/blob/main/about/si.md)
 
-## Model Description
-This repository contains a fine-tuned GPT-2 [124] model implemented using the PyTorch framework.
+### File Descriptions
+1.`llama-cpp-python` : this module is wraper for [llama-cpp](https://github.com/ggerganov/llama.cpp) which is a c++ implementation of [llama2](https://en.wikipedia.org/wiki/LLaMA) model.
 
-## File Descriptions
-1. `architecture`: The implementation of the GPT-2 model using the PyTorch library refered from nanogpt and tranformers implementation of gpt2.
-2. `encoder`: The model uses either tiktoken or custom bpe-encoding from openai.
+### Usage:
 
-## Usage
-To use the fine-tuned GPT-2 model, you can follow the instructions below:
-1. Clone this repository to your local machine.
-2. Load the `model.bin` file into your PyTorch application for text generation or other natural language processing tasks.
+SI can be used for various tasks like:
 
-## Contributing
+1. File summarization
+2. Code generation 
+3. Start interacting with Linux using natural language commands.
+4. Automate tasks etc...
+
+### Contributing
 Contributions to this project are welcome! If you find any issues or want to add new features, feel free to create a pull request.
 
-## Contact Information
-For any questions or inquiries, you can reach out to Gunasekar at [shellbotquery@gmail.com].
+### Contact Information
+For any questions or inquiries, you can reach out me by [contact](shellbotquery@gmail.com).
 
 Thank you for checking out this project! I hope you find it useful and informative.
