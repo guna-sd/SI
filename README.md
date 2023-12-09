@@ -60,7 +60,7 @@ While SI offers significant advantages in terms of usability and accessibility, 
 
 - **Context Sensitivity**: SI's understanding of context may be limited, resulting in inaccuracies when dealing with complex instructions.
 
-- **Dependency on Language Models**: SI's performance relies on the underlying language model [llama2](https://github.com/guna-sd/SI/blob/main/model/model_info.md), and updates to language models may impact its behavior.
+- **Dependency on Language Models**: SI's performance relies on the underlying language model [TinyLlama](https://github.com/jzhang38/TinyLlama), and updates to language models may impact its behavior.
 
 ## Contributing
 
@@ -72,3 +72,6 @@ If you have any questions, suggestions, or feedback, please reach me out on [she
 
 ## development
 This project is still under development.
+
+## Inspiration
+The model developed in this project is purely inspired by karpathy's --> [llama2.c](https://github.com/karpathy/llama2.c) and [TinyLlama](https://github.com/jzhang38/TinyLlama) which is 1.1b llm trained on 3T tokens.
