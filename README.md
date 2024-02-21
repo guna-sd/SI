@@ -1,13 +1,12 @@
 # Shell Intelligence (SI) 
 
-
-    ╔══╗      ╔╗ ╔══╗   ╔╗
-    ║╔╗║      ║║ ║╔╗║  ╔╝╚╗
-    ║╚╝╚╦══╦══╣╚═╣╚╝╚╦═╩╗╔╝
-    ║╔═╗║╔╗║══╣╔╗║╔═╗║╔╗║║
-    ║╚═╝║╔╗╠══║║║║╚═╝║╚╝║╚╗
-    ╚═══╩╝╚╩══╩╝╚╩═══╩══╩═╝    
-
+```
+  ____   _            _  _  ____          _   
+ / ___| | |__    ___ | || || __ )   ___  | |_ 
+ \___ \ | '_ \  / _ \| || ||  _ \  / _ \ | __|
+  ___) || | | ||  __/| || || |_) || (_) || |_ 
+ |____/ |_| |_| \___||_||_||____/  \___/  \__|                                               
+```
 
 ### Shell Intelligence (SI)
 
@@ -73,5 +72,3 @@ If you have any questions, suggestions, or feedback, please reach me out on [she
 ## development
 This project is still under development.
 
-## Inspiration
-The model developed in this project is purely inspired by karpathy's --> [llama2.c](https://github.com/karpathy/llama2.c) and [TinyLlama](https://github.com/jzhang38/TinyLlama) which is 1.1b llm trained on 3T tokens.
