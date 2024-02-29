@@ -1,8 +1,9 @@
 #if !defined (_SHELL_H_)
-#define _SHELL_H_
+# define _SHELL_H_
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <signal.h>
 #include <termios.h>
@@ -16,17 +17,13 @@
 #include <time.h>
 #include <ctype.h>
 #include <math.h>
+#include <stdint.h>
 #include <sys/mman.h>
+#include <sys/file.h>
+
 
 #define CMD_SUCCESS 0
-#define CMD_ERROR -1
-
-#define _EXEC    0 
-#define OR_EXEC  1  // ---> EXECUTION OF COMMAND USING LOGICAL OR '||'
-#define AND_EXEC 2  // ---> EXECUTION OF COMMAND USING LOGICAL AND '&&'
-#define SEQ_EXEC 3  // ---> EXECUTION OF COMMAND FOLLOWED BY SEMICOLON ';'
-#define REDIRECT_EXEC 4 // ---> EXECUTION OF COMMAND FOLLOWED BY '>'
-#define PIPE_EXEC 5  // ---> EXECUTION OF COMMAND FOLLOWED BY '|'
+#define CMD_FAILURE 1
 
 #define BGREEN "\e[1;92m"
 #define BRED "\e[1;91m"
@@ -38,55 +35,30 @@
 #define RESET "\e[0m"
 
 #define SI_VERSION "0.1"
-#define HIST_FILE	".si_history"
-#define HIST_MAX_Lines 1024
-#define MAX_ALIAS '100'
-#define MAX_CMD_SIZE 1024
-
-
-typedef struct {
-    char *cmd;
-    char *alias;
-    char *path;
-} Alias;
-
-typedef struct process
-{
-  struct process *next;
-  char **argv;
-  pid_t pid;
-  char completed;
-  char stopped;
-  int status;
-} process;
-
+#define INPUT_SIZE 1024
+static char _path[1024];
 
 // shell utils
-void init();
-int _fork(char *argv[]);
-int _exec(char *argv[]);
-int _exec_or(char *argv[]);
-int _exec_and(char *argv[]);
-int _exec_seq(char *argv[]);
-int _exec_redirect(char *args, int mode, char *filename);
-int _exec_pipe(char *args);
-void _perror(char *ErrorMessage);
-void signalHandler_child();
-void signalHandler_interrupt();
+static void init();
+void _exec(char **args);
+void _exec_bg(char **args);
+void _io(char *args[], char *outputFile, int option);
+void _pipe(char *args[]);
+int _cmdh(char *args[]);
+static void signalHandler_child();
+static void signalHandler_interrupt();
 
 // cmd utils
 int _cd(char *argv[]);
-int _alias(char *argv[]);
-int _version();
-int _help();
-int _history();
-
-// shell utils
-void initial_screen();
-int _add_alias(char *args, char *alias);
-int _remove_alias(char *alias);
-void prompt();
-char* _input();
+void _help(void);
+void _history(void);
+void _perror(char *ErrorMessage);
+void initial_screen(void);
+void prompt(void);
+char* _input(void);
+void _store(char *args[]);
+void _clr_history(void);
+void _out();
 
 // llm utils
 long time_in_ms();

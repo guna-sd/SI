@@ -14,15 +14,9 @@ Shell Intelligence (SI) is an innovative tool that combines natural language pro
 
 ## Features
 
-- **Natural Language Processing**: SI understands natural language input and translates it into executable commands, making Linux more accessible to a wider audience.
+- **Natural Language Processing**: SI understands natural language input and translates it into commands, making Linux more accessible to a wider audience...
 
-- **Simplified Command Execution**: SI simplifies command execution by allowing users to interact with Linux effortlessly using natural language.
-
-- **Effortless Scripting and Automation**: SI offers advanced features for effortless scripting and automation, making repetitive tasks more efficient.
-
-- **Human-Readable Reports**: SI generates reports in plain English, enhancing the understandability of command output.
-
-- **Intelligent Error Handling**: SI provides context-aware error messages and suggestions to help troubleshoot problems effectively.
+- **Error Handling**: SI provides context-aware error messages and suggestions to help troubleshoot problems effectively and generates reports in plain English, enhancing the understandability of command output.
 
 ## Getting Started
 
@@ -38,17 +32,17 @@ Here are some examples of how to use SI:
 
 - Set the default text editor to "gedit":
 ```
-$!> Set the default text editor to gedit.
+guna@anug:[/home/guna/Si/SHELL/]$!> Set the default text editor to gedit.
 ```
 
 - Configure the Linux firewall to allow all incoming TCP traffic on port 80:
 ```
-$!> Configure the Linux firewall to allow all incoming TCP traffic on port 80.
+guna@anug:[/home/guna/Si/SHELL/]$!> Configure the Linux firewall to allow all incoming TCP traffic on port 80.
 ```
 
 - Generate a report of running processes:
 ```
-$!> Generate a report of running processes.
+guna@anug:[/home/guna/Si/SHELL/]$!> Generate a report of running processes.
 ```
 
 ## Limitations
@@ -59,16 +53,16 @@ While SI offers significant advantages in terms of usability and accessibility, 
 
 - **Context Sensitivity**: SI's understanding of context may be limited, resulting in inaccuracies when dealing with complex instructions.
 
-- **Dependency on Language Models**: SI's performance relies on the underlying language model [TinyLlama](https://github.com/jzhang38/TinyLlama), and updates to language models may impact its behavior.
+- **Dependency on Language Models**: SI's performance relies on the underlying language model and updates to language models may impact its behavior.
 
 ## Contributing
 
- I am eager to welcome any valuable contributions to improve SI and make it even more powerful and user-friendly.
+ I am eager to welcome any valuable contributions to improve SI and make it even more powerful and user-friendly and more efficient.
 
 ## Contact
 
 If you have any questions, suggestions, or feedback, please reach me out on [shellbotquery@gmail.com](shellbotquery@gmail.com).
 
 ## development
-This project is still under development.
+This project is still under development...
 
