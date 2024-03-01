@@ -48,7 +48,7 @@ void _store(char *args[]) {
     }
     char *input = malloc(total_length+1);
     if (input == NULL) {
-        perror("Error: could not allocate memory for input");
+        _perror("Error: could not allocate memory for input");
         return;
     }
     input[0] = '\0';
@@ -59,24 +59,24 @@ void _store(char *args[]) {
 
     int history_file = open(_path, O_WRONLY | O_CREAT | O_APPEND, 0600);
     if (history_file == -1) {
-        perror("Error: could not open or create .si_history file");
+        _perror("Error: could not open or create .si_history file");
         return;
     }
     if (flock(history_file, LOCK_EX) == -1) {
-        perror("Error: could not lock history file");
+        _perror("Error: could not lock history file");
         close(history_file);
         return;
     }
 
     if (write(history_file, input, strlen(input)) == -1 || write(history_file, "\n", 1) == -1) {
-        perror("Error: could not write to history file");
+        _perror("Error: could not write to history file");
         flock(history_file, LOCK_UN);
         close(history_file);
         return;
     }
 
     if (flock(history_file, LOCK_UN) == -1) {
-        perror("Error: could not unlock history file");
+        _perror("Error: could not unlock history file");
     }
     close(history_file);
 }
@@ -84,7 +84,7 @@ void _store(char *args[]) {
 void _clr_history(void) {
     FILE *history_file = fopen(_path, "w");
     if (history_file == NULL) {
-        perror("Error: could not open or create history file");
+        _perror("Error: could not open or create history file");
         return;
     }
     fclose(history_file);
