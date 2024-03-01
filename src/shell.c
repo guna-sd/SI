@@ -293,7 +293,7 @@ int _cmdh(char *args[]) {
     } else if (strcmp(args[0], "history") == 0) {
         _history();
     } else if (strcmp(args[0], "clear") == 0) {
-        system("clear");
+        if(system("clear")) printf("\n");
     } else if (strcmp(args[0], "help") == 0) {
         _help();
     } else {

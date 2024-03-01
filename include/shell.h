@@ -61,18 +61,100 @@ void _clr_history(void);
 void _out();
 
 // llm utils
+
+typedef struct llm_config {
+    int dim;
+    int hidden_dim;
+    int num_layers;
+    int num_heads;
+    int num_kv_heads;
+    int max_seq_len;
+    int vocab_size;
+} Config;
+
+typedef struct llm_weights {
+    float *token_embedding_table;
+    float *rms_att_weights;
+    float *rms_ffn_weights;
+    float *wq;
+    float *wk;
+    float *wv;
+    float *wo;
+    float *w1;
+    float *w2;
+    float *w3;
+    float *rms_final_weights;
+    float *wcls;
+} Weights;
+
+typedef struct llm_runstate {
+    float *x;
+    float *xb;
+    float *xb2;
+    float *hb;
+    float *hb2;
+    float *q;
+    float *k;
+    float *v;
+    float *attn;
+    float *logits;
+    float *key_cache;
+    float *value_cache;
+} Runstate;
+
+typedef struct llm_transformer 
+{
+    Config config;
+    Weights weights;
+    Runstate runstate;
+    int fd;
+    float *data;
+    size_t file_size;
+} Transformer;
+
+typedef struct llm_tokens
+{
+    char *token;
+    int token_id;
+} Tokens;
+
+typedef struct llm_tokenizer
+{
+    char **vocab;
+    float *vocab_scores;
+    Tokens *sorted_vocab;
+    int vocab_size;
+    unsigned int max_token_length;
+    unsigned char byte_pieces[512];
+} Tokenizer;
+
+typedef struct llm_P
+{
+    float prob;
+    int index;
+} ProbIndex;
+
+typedef struct llm_sampler
+{
+    int vocab_size;
+    ProbIndex *probindex;
+    float temperature;
+    float topp;
+    unsigned long long rng_state;
+} Sampler;
+
 long time_in_ms();
-void safe_printf(char *piece);
-void matmul(float* xout, float* x, float* w, int n, int d);
+void bprintf(char *piece);
+void matmul(float *out, float *x, float *y, int n, int d);
 void softmax(float* x, int size);
 void rmsnorm(float* o, float* x, float* weight, int size);
 int compare_tokens(const void *a, const void *b);
 int compare(const void *a, const void *b);
 int sample_argmax(float *prob, int n);
 int sample_mult(float *prob, int n, float coin);
+int topp(float *prob, int size, float topp, ProbIndex *probindex, float coin);
 unsigned int random_u32(unsigned long long *state);
 float random_f32(unsigned long long *state);
 void *read_file(char *filename);
-
 
 #endif

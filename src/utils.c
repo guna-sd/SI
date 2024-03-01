@@ -31,7 +31,11 @@ char *_input(void) {
         perror("Error: could not allocate memory for input");
         exit(EXIT_FAILURE);
     }
-    fgets(input, INPUT_SIZE, stdin);
+    if (fgets(input, INPUT_SIZE, stdin) == NULL)
+    {
+        _perror("Error: could not read input ^c from stdin");
+        exit(EXIT_FAILURE);
+    }
 
     return input;
 }
@@ -42,7 +46,7 @@ void _store(char *args[]) {
     for (int i = 0; args[i] != NULL; i++) {
         total_length += strlen(args[i]) + 1;
     }
-    char *input = malloc(total_length);
+    char *input = malloc(total_length+1);
     if (input == NULL) {
         perror("Error: could not allocate memory for input");
         return;
@@ -113,9 +117,11 @@ void prompt(void)
 {
     char hostn[1024] = "";
     gethostname(hostn, sizeof(hostn));
-    getcwd(currentDirectory, sizeof(currentDirectory));
-    printf(BGREEN"%s@%s:"BBLUE"[%s]"BWHITE"$!> ", getenv("LOGNAME"), hostn,currentDirectory);
-    fflush(stdout);
+    if ((getcwd(currentDirectory, sizeof(currentDirectory))))
+    {
+        printf(BGREEN"%s@%s:"BBLUE"[%s]"BWHITE"$!> ", getenv("LOGNAME"), hostn,currentDirectory);
+        fflush(stdout);
+    }
 }
 
 void _help(void) {
@@ -132,3 +138,186 @@ void _out() {
     printf(BRED"\nExiting...\n\n"RESET);
     exit(EXIT_SUCCESS);
 }
+
+
+
+long time_in_ms()
+{
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    return time.tv_sec * 1000 + time.tv_nsec / 1000000;
+}
+
+void bprintf(char *rbytes)
+{
+    if (rbytes == NULL)
+    {
+        return;
+    }
+    if (rbytes[0] == '\0')
+    {
+        return;
+    }
+    if (rbytes[1] == '\0')
+    {
+        unsigned char buf = rbytes[0];
+        if (!(isprint(buf) || isspace(buf)))
+        {
+            return;
+        }
+    }
+    printf(BWHITE"%s\n"BWHITE, rbytes);
+}
+
+void matmul(float* out, float* x, float* w, int n, int d) {
+    int i, j;
+    #pragma omp parallel for private(i, j)
+    for (i = 0; i < d; i++) {
+        float val = 0.0f;
+        for (j = 0; j < n; j++) {
+            val += w[i * n + j] * x[j];
+        }
+        out[i] = val;
+    }
+}
+
+void softmax(float* x, int size) {
+    float max_val = x[0];
+    for (int i = 1; i < size; i++) {
+        if (x[i] > max_val) {
+            max_val = x[i];
+        }
+    }
+    float sum = 0.0f;
+    for (int i = 0; i < size; i++) {
+        x[i] = expf(x[i] - max_val);
+        sum += x[i];
+    }
+    for (int i = 0; i < size; i++) {
+        x[i] /= sum;
+    }
+}
+
+
+void rmsnorm(float *o, float *x, float *w, int size)
+{
+    float sum = 0.0f;
+    for (int i = 0; i < size; i++) {
+        sum += x[i] * x[i];
+    }
+    sum /= size;
+    sum += 1e-5f;
+    sum = 1.0f / sqrtf(sum);
+    for (int i = 0; i < size; i++) {
+        o[i] = w[i] * (sum * x[i]);
+    }
+}
+
+int compare_tokens(const void *a, const void *b) {
+    return strcmp(((Tokens*)a)->token, ((Tokens*)b)->token);
+}
+
+int sample_argmax(float *prob, int argmax)
+{
+    int index = 0;
+    float max = prob[0];
+    for (int i = 1; i < argmax; i++) {
+        if (prob[i] > max) {
+            max = prob[i];
+            index = i;
+        }
+    }
+    return index;
+}
+
+int sample_multinomial(float *prob, int size, float coin)
+{
+    float cdf = 0.0f;
+    for (int i = 0; i < size; i++) {
+        cdf += prob[i];
+        if (coin < cdf) {
+            return i;
+        }
+    }
+    return size-1;
+}
+
+int compare(const void *a, const void *b) {
+    ProbIndex *a_ = (ProbIndex *) a;
+    ProbIndex *b_ = (ProbIndex *) b;
+    if (a_->prob < b_->prob) return 1;
+    if (a_->prob > b_->prob) return -1;
+    return 0;
+}
+
+int topp(float* prob, int size, float topp, ProbIndex* probindex, float coin)
+{
+    int n = 0;
+    const float cutoff = (1.0f - topp) / (size-1);
+    for (int i = 0; i < size; i++) {
+        if(prob[i] >= cutoff)
+        {
+            probindex[n].index = i;
+            probindex[n].prob = prob[i];
+            n++;
+        }
+    }
+    qsort(prob, n, sizeof(ProbIndex), compare);
+
+    float cumulative_prob = 0.0f;
+    int idx = n - 1;
+    for (int i = 0; i < n; i++) {
+    cumulative_prob += probindex[i].prob;
+        if(cumulative_prob > topp)
+        {
+            idx = i;
+            break;
+        }
+    }
+    float random = coin * cumulative_prob;
+    float cdf = 0.0f;
+    for (int i = 0; i <=idx; i++) {
+        cdf += probindex[i].prob;
+        if (random < cdf) {
+            return probindex[i].index;
+        }
+    }
+    return probindex[idx].index;
+}
+
+unsigned int random_u32(unsigned long long *state)
+{
+    *state ^= *state >> 12;
+    *state ^= *state << 25;
+    *state ^= *state >> 27;
+    return (*state * 0x2545F4914F6CDD1Dull) >> 32;
+}
+
+float random_f32(unsigned long long *state)
+{
+    return (random_u32(state) >> 8 ) / 16777216.0f;
+}
+
+int sample(Sampler *sampler, float *logits)
+{
+    int next;
+    if (sampler->temperature == 0.0f)
+    {
+        next = sample_argmax(logits, sampler->vocab_size);
+    }else {
+        for (int q = 0; q < sampler->vocab_size; q++)
+        {
+            logits[q] = sampler->temperature;
+        }
+        softmax(logits, sampler->vocab_size);
+        float coin = random_f32(&sampler->rng_state);
+        if (sampler->topp <= 0 || sampler->topp >= 1)
+        {
+            next = sample_multinomial(logits, sampler->vocab_size, coin);
+        }else {
+            next = topp(logits, sampler->vocab_size, sampler->topp, sampler->probindex, coin);
+        }
+    }
+    return next;
+}
+
