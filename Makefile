@@ -23,6 +23,6 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
 
 clean:
-	rm -rf $(BUILD_DIR)/*
+	rm -r $(BUILD_DIR) SI
 
 .PHONY: all clean
