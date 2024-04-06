@@ -58,7 +58,7 @@
     Copy a directory and its contents to a new location.
     What is the current time zone?
     Remove duplicate lines from a text file.
-    Display the contents of a log file, showing only the last 10 lines.
+    Display the contents of a log file showing only the last 10 lines.
     Encrypt a file using GPG.
     Decrypt a GPG-encrypted file.
     Convert a timestamp to a human-readable date and time.
@@ -135,17 +135,17 @@
     Find and remove all empty files in a directory.
     List all available cron jobs.
     Check the status of a specific RAID array.
-    Display the contents of a specific file, excluding blank lines.
+    Display the contents of a specific file excluding blank lines.
     Find all symbolic links in a directory.
     List all mounted filesystems along with their mount points.
     Check the status of a specific printer.
     Display the current memory usage of a specific process.
-    Find all files with specific permissions (e.g., executable).
+    Find all files with specific permissions (e.g. executable).
     List all available GPU devices and their utilization.
     Display the number of characters in a text file.
     Find and remove all files with a certain extension.
     List all users in a specific group.
-    Display the output of a specific command in real-time (e.g., tailing a log).
+    Display the output of a specific command in real-time (e.g. tailing a log).
     Find all files that have been accessed within the last week.
     Display the current system uptime in a human-readable format.
     List all installed Apache modules.
@@ -154,7 +154,7 @@
     Find and remove all temporary files in a directory.
     List all available time zones.
     Calculate the total size of a directory and its subdirectories.
-    Check the status of a specific network service (e.g., SSH, HTTP).
+    Check the status of a specific network service (e.g. SSH HTTP).
     Display the number of words in a specific file.
     Find and remove all zero-byte files in a directory.
     List all available system fonts.
@@ -586,7 +586,7 @@
     Check the status of a specific container orchestration cluster.
     Display the current database replication lag.
     List all available software project management tools.
-    Generate a random password with specific requirements (length, complexity, etc.).
+    Generate a random password with specific requirements (length complexity etc.).
     Find all files in a directory sorted by file extension.
     Check the status of a specific continuous integration tool.
     Display the current system network latency.
@@ -1213,7 +1213,7 @@
     How do I check the current network interface statistics in Linux?
     What is the purpose of the /etc/group file in Linux?
     How can I find all files that have the execute permission set for group members?
-    How do I set up a LAMP (Linux, Apache, MySQL, PHP) stack in Linux?
+    How do I set up a LAMP (Linux Apache MySQL PHP) stack in Linux?
     What is the purpose of the netstat command in Linux?
     How can I find all files that have the read permission set for group members?
     How do I check the current system process table in Linux?
@@ -1593,10 +1593,10 @@
     Summarize the network load balancing algorithms used and suggest optimizations.
     Analyze network performance metrics to identify bottlenecks and propose optimizations.
     Generate a summary of the network topology and highlight potential single points of failure.
-    Provide instructions for configuring network security protocols, such as IPsec or SSL/TLS.
+    Provide instructions for configuring network security protocols such as IPsec or SSL/TLS.
     Summarize the network access control policies and recommend improvements for better security.
     Analyze network traffic patterns to detect anomalies and potential security threats.
-    Generate a report on network device inventory, including make, model, and firmware versions.
+    Generate a report on network device inventory including make model and firmware versions.
     Provide instructions for configuring network monitoring tools to track network performance.
     Summarize the network routing protocols in use and suggest optimizations.
     Analyze network access logs to identify trends and patterns of user activity.
