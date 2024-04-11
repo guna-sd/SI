@@ -77,9 +77,11 @@ typedef struct {
 typedef struct {
     float *embeddings;
     float *attn_norm;
-    float *wqkv;
-    float *wo;
     float *post_attn_norm;
+    float *wq;
+    float *wk;
+    float *wv;
+    float *wo;
     float *w1;
     float *w2;
     float *w3;
@@ -88,16 +90,18 @@ typedef struct {
 } Weights;
 
 typedef struct {
-    float *x;
-    float *x2;
-    float *xt;
-    float *h;
-    float *h2;
-    float *qkv;
-    float *attn;
+    float *x; 
+    float *xb;
+    float *xb2;
+    float *hb;
+    float *hb2;
+    float *q;
+    float *k;
+    float *v;
+    float *att;
     float *logits;
-    float *key_cache;
-    float *value_cache;
+    float* key_cache;
+    float* value_cache;
 } Runstate;
 
 typedef struct {

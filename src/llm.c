@@ -189,10 +189,11 @@ void rms_norm(float *o, float *x, float *w, int dim, float eps) {
     for (int i = 0; i < dim; i++) {
         sum_sq += x[i] * x[i];
     }
+    sum_sq /= dim
     float inv_sqrt = 1.0f / sqrtf(sum_sq + eps);
 
     for (int i = 0; i < dim; i++) {
-        o[i] = x[i] * inv_sqrt * (w + 1.0f);
+        o[i] = x[i] * inv_sqrt * (w[j] + 1.0f);
     }
 }
 
@@ -219,7 +220,7 @@ void softmax(float *x, int size)
     }
 }
 
-void forward(Transformer *transformer, int token, int pos)
+float* forward(Transformer *transformer, int token, int pos)
 {
     Config *params = &transformer->config;
     Weights *weights = &transformer->weights;
@@ -231,9 +232,104 @@ void forward(Transformer *transformer, int token, int pos)
     int dim = params->dim;
     int kv_dim = (params->dim * params->n_kv_heads) / params->n_heads;
     int head_dim = params->head_dim;
-    int hiddlen_dim = params->hiddlen_dim;
+    int hidden_dim = params->hidden_dim;
+    int num_heads = params->n_heads;
+    int head_size = dim / num_heads;
+    int kv_mul = num_heads / params->n_kv_heads;
+    float eps = params->eps
 
-    
+    float *embeddings = weights->embeddings + token * dim;
+    memcpy(x, embeddings, dim * sizeof(*x));
 
+    for (unsigned long long layer = 0; layer < params->n_layers;layer++)
+    {
+        rms_norm(runstate->x2, x, weights->attn_norm + layer * dim, dim, eps);
 
+        int layer_offset = layer * params->max_seq_len * kv_dim;
+        runstate->k = runstate->key_cache + layer_offset + pos * kv_dim;
+        runstate->v = runstate->value_cache + layer_offset + pos * kv_dim;
+
+        matmul(runstate->q, runstate->xb, runstate->wq + layer * dim * dim, dim, dim);
+        matmul(runstate->k, runstate->xb, runstate->wk + layer * dim * kv_dim, dim, kv_dim);
+        matmul(runstate->v, runstate->xb, runstate->wv + layer * dim * kv_dim, dim, kv_dim);
+
+        for (int i = 0; i < dim; i+2)
+        {
+            float freq = 1.0f / powf(10000.0f, head_dim / (float)head_size);
+            float val = pos * freq
+            float fcs = cosf(val);
+            float fsi = sinf(val);
+            int rotational = i < kv_dim ? 2 : 1;
+            for (int v = 0; v < rotational; v++)
+            {
+                float vect = v == 0 ? state->q : state->k;
+                float v0 = vect[i];
+                float v1 = vect[i + 1];
+                vect[i] = v0 * fcs - v1 * fsi;
+                vect[i + 1] = v0 * fsi + v1 * fcs;
+            }
+        }
+
+        int h;
+        #pragma omp parallel for private(h)
+        for (h=o; h < num_heads; h++)
+        {
+            float *q = state->q + h * head_size;
+            float *att = state->att + h * params->max_seq_len;
+            for (int t=0; t <= pos; t++)
+            {
+                float *k = state->key_cache + layer_offset + t * kv_dim + (h/kv_mul) * head_size;
+                float score = 0.0f;
+                for (int i = 0; i < head_size; i++)
+                {
+                    score += q[i] * k[i];
+                }
+                score /= sqrtf(head_size);
+                att[t] = score;
+            }
+            softmax(att, pos + 1);
+
+            float *xb = state->xb + h * head_size;
+            memset(xb, 0, head_size * sizeof(float));
+            for (int t=0; t <= pos; t++)
+            {
+                float *v = state->value_cache + layer_offset + t * kv_dim + (h/kv_mul) * head_size;
+                for (int i = 0; i < head_size; i++)
+                {
+                    xb[i] += att[t] * v[i];
+                }
+            }
+        }
+        matmul(state->xb2, state->xb, weights->wo + layer * dim * dim, dim, dim);
+
+        for (int i = 0; i < dim; i++)
+        {
+            x[i] += state->xb2[i];
+        }
+
+        rms_norm(state->xb, x, weights->post_attn_norm + layer * dim, dim, eps)
+
+        matmul(state->hb, state->xb, weights->w1 + layer * dim * hidden_dim, dim, hidden_dim);
+        matmul(state->hb, state->xb, weights->w3 + layer * dim * hidden_dim, dim, hidden_dim);
+
+        for (int i = 0; i < hidden_dim; i++)
+        {
+            float val = s->hb[i];
+            val *= (1.0f / (1.0f + expf(-val)));
+            val *= state->hb2[i];
+            state->hb[i] = val;
+        }
+
+        matmul(state->xb, state->hb weights->w2 + layer * dim * hidden_dim, hidden_dim, dim);
+
+        for (int i = 0; i < dim; i++)
+        {
+            x[i] += state->xb[i];
+        }
+    }
+    rms_norm(x,x,weights->layer_norm,dim,eps);
+
+    matmul(state->logits, x, weights->wcls, params->dim, params->vocab_size);
+    return state->logits;
 }
+
