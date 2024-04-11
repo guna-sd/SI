@@ -20,7 +20,6 @@
 #include <stdint.h>
 #include <sys/mman.h>
 #include <sys/file.h>
-#include <cblas.h>
 
 #define CMD_SUCCESS 0
 #define CMD_FAILURE 1
@@ -67,7 +66,7 @@ typedef struct {
     int n_layers;
     int n_heads;
     int n_kv_heads;
-    int hiddlen_dim;
+    int hidden_dim;
     int head_dim;
     int vocab_size;
     int max_seq_len;
@@ -107,7 +106,7 @@ typedef struct {
 typedef struct {
     Config config;
     Weights weights;
-    RunState runstate;
+    Runstate runstate;
     int fd;
     float *data;
     ssize_t file_size;
@@ -141,20 +140,20 @@ typedef struct {
 } Sampler;
 
 long time_in_ms();
-void build_tokenizer(Tokenizer *tokenizer, char *tokenizer_path)
-void free_tokenizer(Tokenizer *tokenizer)
-void encode(Tokenizer* t, char *text, bool bos, bool eos, int *tokens, int *n_tokens)
-char *decode(Tokenizer *tokenizer, int prev_token, int token)
-int str_lookup(char *str, TokenIndex *sorted_vocab, int vocab_size)
-void matmul(float *out,float *x, float *w, int n, int dim)
+void build_tokenizer(Tokenizer *tokenizer, char *tokenizer_path);
+void free_tokenizer(Tokenizer *tokenizer);
+void encode(Tokenizer* t, char *text, bool bos, bool eos, int *tokens, int *n_tokens);
+char *decode(Tokenizer *tokenizer, int prev_token, int token);
+int str_lookup(char *str, TokenIndex *sorted_vocab, int vocab_size);
+void matmul(float *out,float *x, float *w, int n, int dim);
 void softmax(float *x, int size);
-void rms_norm(float *o, float *x, float *w, int dim, float eps) 
+void rms_norm(float *o, float *x, float *w, int dim, float eps); 
 int compare_tokens(const void *a, const void *b);
 int sample_argmax(float *prob, int n);
 int sample_mult(float *prob, int n, float coin);
 int topp(float *prob, int size, float topp, ProbIndex *probindex, float coin);
 unsigned int random_u32(unsigned long long *state);
 float random_f32(unsigned long long *state);
-void forward(Transformer *transformer, int token, int pos)
+float *forward(Transformer *transformer, int token, int pos);
 
 #endif

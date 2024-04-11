@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Ofast -march=native -funroll-all-loops -g
-LIBS = -lm -fopenmp -lopenblas
+LIBS = -lm -fopenmp
 
 SRC_DIR = src
 INCLUDE_DIR = include

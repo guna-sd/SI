@@ -189,11 +189,11 @@ void rms_norm(float *o, float *x, float *w, int dim, float eps) {
     for (int i = 0; i < dim; i++) {
         sum_sq += x[i] * x[i];
     }
-    sum_sq /= dim
+    sum_sq /= dim;
     float inv_sqrt = 1.0f / sqrtf(sum_sq + eps);
 
     for (int i = 0; i < dim; i++) {
-        o[i] = x[i] * inv_sqrt * (w[j] + 1.0f);
+        o[i] = x[i] * inv_sqrt * (w[i] + 1.0f);
     }
 }
 
@@ -208,7 +208,7 @@ void softmax(float *x, int size)
             max = x[i];
         }
     }
-    float sum = 0f;
+    float sum = 0.0f;
     for (int i = 0; i < size; i++)
     {
         x[i] = expf(x[i] - max);
@@ -220,12 +220,11 @@ void softmax(float *x, int size)
     }
 }
 
-float* forward(Transformer *transformer, int token, int pos)
+float *forward(Transformer *transformer, int token, int pos)
 {
     Config *params = &transformer->config;
     Weights *weights = &transformer->weights;
-    RunState *runstate = &transformer->runstate;
-    float *embeddings = weights->embeddings;
+    Runstate *runstate = &transformer->runstate;
 
     float *x = runstate->x;
 
@@ -236,33 +235,33 @@ float* forward(Transformer *transformer, int token, int pos)
     int num_heads = params->n_heads;
     int head_size = dim / num_heads;
     int kv_mul = num_heads / params->n_kv_heads;
-    float eps = params->eps
+    float eps = params->eps;
 
     float *embeddings = weights->embeddings + token * dim;
     memcpy(x, embeddings, dim * sizeof(*x));
 
     for (unsigned long long layer = 0; layer < params->n_layers;layer++)
     {
-        rms_norm(runstate->x2, x, weights->attn_norm + layer * dim, dim, eps);
+        rms_norm(runstate->xb, x, weights->attn_norm + layer * dim, dim, eps);
 
         int layer_offset = layer * params->max_seq_len * kv_dim;
         runstate->k = runstate->key_cache + layer_offset + pos * kv_dim;
         runstate->v = runstate->value_cache + layer_offset + pos * kv_dim;
 
-        matmul(runstate->q, runstate->xb, runstate->wq + layer * dim * dim, dim, dim);
-        matmul(runstate->k, runstate->xb, runstate->wk + layer * dim * kv_dim, dim, kv_dim);
-        matmul(runstate->v, runstate->xb, runstate->wv + layer * dim * kv_dim, dim, kv_dim);
+        matmul(runstate->q, runstate->xb, weights->wq + layer * dim * dim, dim, dim);
+        matmul(runstate->k, runstate->xb, weights->wk + layer * dim * kv_dim, dim, kv_dim);
+        matmul(runstate->v, runstate->xb, weights->wv + layer * dim * kv_dim, dim, kv_dim);
 
         for (int i = 0; i < dim; i+2)
         {
             float freq = 1.0f / powf(10000.0f, head_dim / (float)head_size);
-            float val = pos * freq
+            float val = pos * freq;
             float fcs = cosf(val);
             float fsi = sinf(val);
             int rotational = i < kv_dim ? 2 : 1;
             for (int v = 0; v < rotational; v++)
             {
-                float vect = v == 0 ? state->q : state->k;
+                float* vect = v == 0 ? runstate->q : runstate->k;
                 float v0 = vect[i];
                 float v1 = vect[i + 1];
                 vect[i] = v0 * fcs - v1 * fsi;
@@ -272,13 +271,13 @@ float* forward(Transformer *transformer, int token, int pos)
 
         int h;
         #pragma omp parallel for private(h)
-        for (h=o; h < num_heads; h++)
+        for (h=0; h < num_heads; h++)
         {
-            float *q = state->q + h * head_size;
-            float *att = state->att + h * params->max_seq_len;
+            float *q = runstate->q + h * head_size;
+            float *att = runstate->att + h * params->max_seq_len;
             for (int t=0; t <= pos; t++)
             {
-                float *k = state->key_cache + layer_offset + t * kv_dim + (h/kv_mul) * head_size;
+                float *k = runstate->key_cache + layer_offset + t * kv_dim + (h/kv_mul) * head_size;
                 float score = 0.0f;
                 for (int i = 0; i < head_size; i++)
                 {
@@ -289,47 +288,180 @@ float* forward(Transformer *transformer, int token, int pos)
             }
             softmax(att, pos + 1);
 
-            float *xb = state->xb + h * head_size;
+            float *xb = runstate->xb + h * head_size;
             memset(xb, 0, head_size * sizeof(float));
             for (int t=0; t <= pos; t++)
             {
-                float *v = state->value_cache + layer_offset + t * kv_dim + (h/kv_mul) * head_size;
+                float *v = runstate->value_cache + layer_offset + t * kv_dim + (h/kv_mul) * head_size;
                 for (int i = 0; i < head_size; i++)
                 {
                     xb[i] += att[t] * v[i];
                 }
             }
         }
-        matmul(state->xb2, state->xb, weights->wo + layer * dim * dim, dim, dim);
+        matmul(runstate->xb2, runstate->xb, weights->wo + layer * dim * dim, dim, dim);
 
         for (int i = 0; i < dim; i++)
         {
-            x[i] += state->xb2[i];
+            x[i] += runstate->xb2[i];
         }
 
-        rms_norm(state->xb, x, weights->post_attn_norm + layer * dim, dim, eps)
+        rms_norm(runstate->xb, x, weights->post_attn_norm + layer * dim, dim, eps);
 
-        matmul(state->hb, state->xb, weights->w1 + layer * dim * hidden_dim, dim, hidden_dim);
-        matmul(state->hb, state->xb, weights->w3 + layer * dim * hidden_dim, dim, hidden_dim);
+        matmul(runstate->hb, runstate->xb, weights->w1 + layer * dim * hidden_dim, dim, hidden_dim);
+        matmul(runstate->hb, runstate->xb, weights->w3 + layer * dim * hidden_dim, dim, hidden_dim);
 
         for (int i = 0; i < hidden_dim; i++)
         {
-            float val = s->hb[i];
+            float val = runstate->hb[i];
             val *= (1.0f / (1.0f + expf(-val)));
-            val *= state->hb2[i];
-            state->hb[i] = val;
+            val *= runstate->hb2[i];
+            runstate->hb[i] = val;
         }
 
-        matmul(state->xb, state->hb weights->w2 + layer * dim * hidden_dim, hidden_dim, dim);
+        matmul(runstate->xb, runstate->hb, weights->w2 + layer * dim * hidden_dim, hidden_dim, dim);
 
         for (int i = 0; i < dim; i++)
         {
-            x[i] += state->xb[i];
+            x[i] += runstate->xb[i];
         }
     }
     rms_norm(x,x,weights->layer_norm,dim,eps);
 
-    matmul(state->logits, x, weights->wcls, params->dim, params->vocab_size);
-    return state->logits;
+    matmul(runstate->logits, x, weights->wcls, params->dim, params->vocab_size);
+    return runstate->logits;
+}
+
+
+int sample_argmax(float *prob, int argmax)
+{
+    int index = 0;
+    float max = prob[0];
+    for (int i = 1; i < argmax; i++) {
+        if (prob[i] > max) {
+            max = prob[i];
+            index = i;
+        }
+    }
+    return index;
+}
+
+int sample_multinomial(float *prob, int size, float coin)
+{
+    float cdf = 0.0f;
+    for (int i = 0; i < size; i++) {
+        cdf += prob[i];
+        if (coin < cdf) {
+            return i;
+        }
+    }
+    return size-1;
+}
+
+int compare(const void *a, const void *b) {
+    ProbIndex *a_ = (ProbIndex *) a;
+    ProbIndex *b_ = (ProbIndex *) b;
+    if (a_->prob < b_->prob) return 1;
+    if (a_->prob > b_->prob) return -1;
+    return 0;
+}
+
+int topp(float* prob, int size, float topp, ProbIndex* probindex, float coin)
+{
+    int n = 0;
+    const float cutoff = (1.0f - topp) / (size-1);
+    for (int i = 0; i < size; i++) {
+        if(prob[i] >= cutoff)
+        {
+            probindex[n].index = i;
+            probindex[n].prob = prob[i];
+            n++;
+        }
+    }
+    qsort(prob, n, sizeof(ProbIndex), compare);
+
+    float cumulative_prob = 0.0f;
+    int idx = n - 1;
+    for (int i = 0; i < n; i++) {
+    cumulative_prob += probindex[i].prob;
+        if(cumulative_prob > topp)
+        {
+            idx = i;
+            break;
+        }
+    }
+    float random = coin * cumulative_prob;
+    float cdf = 0.0f;
+    for (int i = 0; i <=idx; i++) {
+        cdf += probindex[i].prob;
+        if (random < cdf) {
+            return probindex[i].index;
+        }
+    }
+    return probindex[idx].index;
+}
+
+unsigned int random_u32(unsigned long long *state)
+{
+    *state ^= *state >> 12;
+    *state ^= *state << 25;
+    *state ^= *state >> 27;
+    return (*state * 0x2545F4914F6CDD1Dull) >> 32;
+}
+
+float random_f32(unsigned long long *state)
+{
+    return (random_u32(state) >> 8 ) / 16777216.0f;
+}
+
+long time_in_ms()
+{
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    return time.tv_sec * 1000 + time.tv_nsec / 1000000;
+}
+
+void bprintf(char *rbytes)
+{
+    if (rbytes == NULL)
+    {
+        return;
+    }
+    if (rbytes[0] == '\0')
+    {
+        return;
+    }
+    if (rbytes[1] == '\0')
+    {
+        unsigned char buf = rbytes[0];
+        if (!(isprint(buf) || isspace(buf)))
+        {
+            return;
+        }
+    }
+    printf(BWHITE"%s\n"BWHITE, rbytes);
+}
+
+int sample(Sampler *sampler, float *logits)
+{
+    int next;
+    if (sampler->temperature == 0.0f)
+    {
+        next = sample_argmax(logits, sampler->vocab_size);
+    }else {
+        for (int q = 0; q < sampler->vocab_size; q++)
+        {
+            logits[q] = sampler->temperature;
+        }
+        softmax(logits, sampler->vocab_size);
+        float coin = random_f32(&sampler->rng_state);
+        if (sampler->topp <= 0 || sampler->topp >= 1)
+        {
+            next = sample_multinomial(logits, sampler->vocab_size, coin);
+        }else {
+            next = topp(logits, sampler->vocab_size, sampler->topp, sampler->probindex, coin);
+        }
+    }
+    return next;
 }
 
