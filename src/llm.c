@@ -465,3 +465,14 @@ int sample(Sampler *sampler, float *logits)
     return next;
 }
 
+void build_sampler(Sampler* sampler, int vocab_size, float temperature, float topp, unsigned long long rng_seed) {
+    sampler->vocab_size = vocab_size;
+    sampler->temperature = temperature;
+    sampler->topp = topp;
+    sampler->rng_state = rng_seed;
+    sampler->probindex = malloc(sampler->vocab_size * sizeof(ProbIndex));
+}
+
+void free_sampler(Sampler* sampler) {
+    free(sampler->probindex);
+}

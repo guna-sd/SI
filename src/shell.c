@@ -6,6 +6,9 @@ static pid_t SHELL_PGID, SHELL_PID;
 static int shell_is_interactive, _terminal;
 struct termios _shell;
 struct sigaction act_child, act_interrupt;
+static Transformer transformer;
+static Tokenizer tokenizer;
+static Sampler sampler;
 
 static void init()
 {
@@ -39,6 +42,8 @@ static void init()
         _perror("Error : Could not set SHELL as interactive...");
         exit(1);
     }
+    build_transformer(&transformer, _model);
+    build_tokenizer(&tokenizer, _tok);
 }
 
 static void signalHandler_interrupt(int signal)
@@ -337,13 +342,17 @@ int _cmdh(char *args[]) {
     return CMD_SUCCESS;
 }
 
+char generate(char *input)
+{
+    
+}
 
 int main() {
     char *args[256];
     char *input;
     char *token;
     init();
-    
+    build_sampler(&sampler, transformer.config.vocab_size, 1.0, 0.8, transformer.config.max_seq_len);
     initial_screen();
     
     while (1) {

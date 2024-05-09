@@ -16,6 +16,8 @@ void initial_screen(void)
     printf("\n"RESET);
     printf("\n");
     snprintf(_path, sizeof(_path), "%s/.local/share/SI/.si_history", getenv("HOME"));
+    snprintf(_model, sizeof(_model), "%s/.local/share/SI/model.bin", getenv("HOME"));
+    snprintf(_tok, sizeof(_tok), "%s/.local/share/SI/tokenizer.bin", getenv("HOME"));
 }
 void _perror(char *ErrorMessage)
 {

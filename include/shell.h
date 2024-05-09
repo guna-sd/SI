@@ -36,6 +36,8 @@
 #define SI_VERSION "0.1"
 #define INPUT_SIZE 1024
 static char _path[1024];
+static char _model[1024];
+static char _tok[1024];
 
 // shell utils
 static void init();
