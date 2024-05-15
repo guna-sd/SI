@@ -25,3 +25,7 @@ else
     echo "Failed to download tokenizer. Please check Internet connection."
     exit 1
 fi
+
+mv "$(pwd)/build" "$SI_DIR"
+echo "export PATH=\"$SI_DIR/build:$PATH\"" >> ~/.bashrc
+echo "SI setup complete."

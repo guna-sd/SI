@@ -9,7 +9,7 @@ BUILD_DIR = build
 SRCS = $(wildcard $(SRC_DIR)/*.c)
 OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
-TARGET = SI
+TARGET = ./build/SI
 
 all: $(BUILD_DIR) $(TARGET) post-build
 
@@ -27,6 +27,6 @@ post-build: $(TARGET)
 	bash setup.sh
 
 clean:
-	rm -r $(BUILD_DIR) $(TARGET)
+	rm -r $(BUILD_DIR)
 
 .PHONY: all clean post-build
