@@ -11,7 +11,7 @@ OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
 TARGET = SI
 
-all: $(BUILD_DIR) $(TARGET)
+all: $(BUILD_DIR) $(TARGET) post-build
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -22,7 +22,11 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
 
-clean:
-	rm -r $(BUILD_DIR) SI
+post-build: $(TARGET)
+	@echo "Running post setup script..."
+	bash setup.sh
 
-.PHONY: all clean
+clean:
+	rm -r $(BUILD_DIR) $(TARGET)
+
+.PHONY: all clean post-build

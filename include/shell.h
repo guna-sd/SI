@@ -60,6 +60,7 @@ char* _input(void);
 void _store(char *args[]);
 void _clr_history(void);
 void _out();
+void printable(char *rbytes);
 
 // llm utils
 
@@ -111,7 +112,7 @@ typedef struct {
     Runstate runstate;
     int fd;
     float *data;
-    ssize_t file_size;
+    ssize_t size;
 } Transformer;
 
 typedef struct {
@@ -142,10 +143,10 @@ typedef struct {
 } Sampler;
 
 long time_in_ms();
-void build_tokenizer(Tokenizer *tokenizer, char *tokenizer_path);
-void free_tokenizer(Tokenizer *tokenizer);
+void tokenizer(Tokenizer *t, char *tokenizer_path);
+void free_tokenizer(Tokenizer *t);
 void encode(Tokenizer* t, char *text, bool bos, bool eos, int *tokens, int *n_tokens);
-char *decode(Tokenizer *tokenizer, int prev_token, int token);
+char *decode(Tokenizer *t, int prev_token, int token);
 int str_lookup(char *str, TokenIndex *sorted_vocab, int vocab_size);
 void matmul(float *out,float *x, float *w, int n, int dim);
 void softmax(float *x, int size);
@@ -154,8 +155,16 @@ int compare_tokens(const void *a, const void *b);
 int sample_argmax(float *prob, int n);
 int sample_mult(float *prob, int n, float coin);
 int topp(float *prob, int size, float topp, ProbIndex *probindex, float coin);
+void sampler(Sampler* s, int vocab_size, float temperature, float topp, unsigned long long rng_seed);
+int sample(Sampler *s, float *logits);
 unsigned int random_u32(unsigned long long *state);
 float random_f32(unsigned long long *state);
 float *forward(Transformer *transformer, int token, int pos);
+void read_model(char *filename, Config *config, Weights *weights, int *fd, float **data, ssize_t *size);
+void model(Transformer *transformer, char *filename);
+void free_model(Transformer *transformer);
+void map_weights(Weights *weights, Config *config, float *ptr, int shared_weights);
+void free_runstate(Runstate* runstate);
+void allocate_runstate(Runstate* runstate, Config* config);
 
 #endif

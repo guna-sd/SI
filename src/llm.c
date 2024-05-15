@@ -11,79 +11,79 @@ int str_lookup(char *str, TokenIndex *sorted_vocab, int vocab_size) {
     return res != NULL ? res->id : -1;
 }
 
-void build_tokenizer(Tokenizer *tokenizer, char *tokenizer_path)
+void tokenizer(Tokenizer *t, char *tokenizer_path)
 {
     for (int i =0; i < 256 ; i++) {
-        tokenizer->byte_pieces[i *2] = (unsigned char)i;
-        tokenizer->byte_pieces[i *2 + 1] = '\0';
+        t->byte_pieces[i *2] = (unsigned char)i;
+        t->byte_pieces[i *2 + 1] = '\0';
         }
     FILE *file = fopen(tokenizer_path, "rb");
     if (!file)
     {
-        fprintf(stderr, "Could not open file %s\n", tokenizer_path);
+        _perror("Could not open file Tokenizer model\n");
         exit(1);
     }
-    if(fread(&tokenizer->max_token_length, sizeof(int), 1, file) != 1)
+    if(fread(&t->max_token_length, sizeof(int), 1, file) != 1)
     {
-        fprintf(stderr, "Could not read max token length %s\n", tokenizer_path);
+        _perror("Could not read max token length from Tokenizer model\n");
         exit(1);
     }
-    if(fread(&tokenizer->vocab_size, sizeof(int), 1, file)!= 1)
+    if(fread(&t->vocab_size, sizeof(int), 1, file)!= 1)
     {
-        fprintf(stderr, "Could not read vocab size %s\n", tokenizer_path);
+        _perror("Could not read vocab size from Tokenizer model\n");
         exit(1);
     }
-    int vocab_size = tokenizer->vocab_size;
-    tokenizer->vocab = (char**)malloc(vocab_size * sizeof(char*));
-    tokenizer->vocab_scores = (float*)malloc(vocab_size * sizeof(float));
+    int vocab_size = t->vocab_size;
+    t->vocab = (char**)malloc(vocab_size * sizeof(char*));
+    t->vocab_scores = (float*)malloc(vocab_size * sizeof(float));
 
     int len;
     for (int i = 0; i < vocab_size; i++) {
-        if (fread(tokenizer->vocab_scores + i, sizeof(float), 1, file) != 1)
+        if (fread(t->vocab_scores + i, sizeof(float), 1, file) != 1)
         { 
-            fprintf(stderr, "failed read\n"); 
+            _perror("failed reading Tokenizer\n"); 
             exit(EXIT_FAILURE);
         }
         if (fread(&len, sizeof(int), 1, file) != 1) 
         { 
-            fprintf(stderr, "failed read\n");
+            _perror("failed reading Tokenizer\n");
             exit(EXIT_FAILURE); 
         }
-        tokenizer->vocab[i] = (char *)malloc(len + 1);
-        if (fread(tokenizer->vocab[i], len, 1, file) != 1) 
+        t->vocab[i] = (char *)malloc(len + 1);
+        if (fread(t->vocab[i], len, 1, file) != 1) 
         {
-             fprintf(stderr, "failed read\n"); 
+             _perror("failed reading Tokenizer\n"); 
              exit(EXIT_FAILURE); 
         }
-        tokenizer->vocab[i][len] = '\0';
+        t->vocab[i][len] = '\0';
     }
-    if ((tokenizer->sorted_vocab = malloc(vocab_size * sizeof(TokenIndex))))
+    if ((t->sorted_vocab = malloc(vocab_size * sizeof(TokenIndex))))
     {
-        for (int i =0; i < tokenizer->vocab_size; i++)
+        for (int i =0; i < t->vocab_size; i++)
         {
-            tokenizer->sorted_vocab[i].id = i;
-            tokenizer->sorted_vocab[i].str = tokenizer->vocab[i];
+            t->sorted_vocab[i].id = i;
+            t->sorted_vocab[i].str = t->vocab[i];
         }
-        qsort(tokenizer->sorted_vocab, tokenizer->vocab_size, sizeof(TokenIndex), compare_tokens);
+        qsort(t->sorted_vocab, t->vocab_size, sizeof(TokenIndex), compare_tokens);
     }
     fclose(file);
     return;
 }
 
-void free_tokenizer(Tokenizer *tokenizer)
+void free_tokenizer(Tokenizer *t)
 {
-    for (int i = 0; i < tokenizer->vocab_size; i++) {
-        free(tokenizer->vocab[i]);
+    for (int i = 0; i < t->vocab_size; i++) {
+        free(t->vocab[i]);
     }
-    free(tokenizer->vocab);
-    free(tokenizer->vocab_scores);
-    free(tokenizer->sorted_vocab);
+    free(t->vocab);
+    free(t->vocab_scores);
+    free(t->sorted_vocab);
 }
 
 void encode(Tokenizer* t, char *text, bool bos, bool eos, int *tokens, int *n_tokens) {
 
     if (text == NULL) { 
-        fprintf(stderr, "cannot encode NULL text\n"); 
+        _perror("cannot encode NULL text\n"); 
         exit(EXIT_FAILURE); 
         }
 
@@ -153,9 +153,9 @@ void encode(Tokenizer* t, char *text, bool bos, bool eos, int *tokens, int *n_to
 }
 
 
-char *decode(Tokenizer *tokenizer, int prev_token, int token)
+char *decode(Tokenizer *t, int prev_token, int token)
 {
-    char *string = tokenizer->vocab[token];
+    char *string = t->vocab[token];
 
     if (prev_token == 1 && string[0] == ' ')
     {
@@ -164,7 +164,7 @@ char *decode(Tokenizer *tokenizer, int prev_token, int token)
     unsigned char byte_val;
     if (sscanf(string, "<0x%02hhX>", &byte_val) == 1)
     {
-        string = (char *)tokenizer->byte_pieces + byte_val * 2;
+        string = (char *)t->byte_pieces + byte_val * 2;
     }
     return string;
 }
@@ -332,6 +332,118 @@ float *forward(Transformer *transformer, int token, int pos)
     return runstate->logits;
 }
 
+void allocate_runstate(Runstate* runstate, Config* config)
+{
+    int kv_dim = (config->dim * config->n_kv_heads) / config->n_heads;
+    runstate->x = calloc(config->dim, sizeof(float));
+    runstate->xb = calloc(config->dim, sizeof(float));
+    runstate->xb2 = calloc(config->dim, sizeof(float));
+    runstate->hb = calloc(config->hidden_dim, sizeof(float));
+    runstate->hb2 = calloc(config->hidden_dim, sizeof(float));
+    runstate->q = calloc(config->dim, sizeof(float));
+    runstate->key_cache = calloc(config->n_layers * config->max_seq_len * kv_dim, sizeof(float));
+    runstate->value_cache = calloc(config->n_layers * config->max_seq_len * kv_dim, sizeof(float));
+    runstate->att = calloc(config->n_heads * config->max_seq_len, sizeof(float));
+    runstate->logits = calloc(config->vocab_size, sizeof(float));
+}
+
+void free_runstate(Runstate* runstate)
+{
+    free(runstate->x);
+    free(runstate->xb);
+    free(runstate->xb2);
+    free(runstate->hb);
+    free(runstate->hb2);
+    free(runstate->q);
+    free(runstate->key_cache);
+    free(runstate->value_cache);
+    free(runstate->att);
+    free(runstate->logits);
+}
+
+void map_weights(Weights *weights, Config *config, float *ptr, int shared_weights)
+{
+    int head_size = config->dim / config->n_heads;
+    unsigned long long n_layers = config->n_layers;
+    weights->embeddings = ptr;
+    ptr += config->vocab_size * config->dim;
+    weights->attn_norm = ptr;
+    ptr += n_layers * config->dim;
+    weights->wq = ptr;
+    ptr += n_layers * config->dim * (config->n_heads * head_size);
+    weights->wk = ptr;
+    ptr += n_layers * config->dim * (config->n_kv_heads * head_size);
+    weights->wv = ptr;
+    ptr += n_layers * config->dim * (config->n_kv_heads * head_size);
+    weights->wo = ptr;
+    ptr += n_layers * (config->n_heads * head_size) * config->dim;
+    weights->post_attn_norm = ptr;
+    ptr += n_layers * config->dim;
+    weights->w1 = ptr;
+    ptr += n_layers * config->dim * config->hidden_dim;
+    weights->w2 = ptr;
+    ptr += n_layers * config->hidden_dim * config->dim;
+    weights->w3 = ptr;
+    ptr += n_layers * config->dim * config->hidden_dim;
+    weights->layer_norm = ptr;
+    ptr += config->dim;
+    ptr += config->max_seq_len * head_size / 2;
+    ptr += config->max_seq_len * head_size / 2;
+    weights->wcls = shared_weights ? weights->embeddings : ptr;
+}
+
+void read_model(char *filename, Config *config, Weights *weights, int *fd, float **data, ssize_t *size)
+{
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        _perror("Could not open Model file ");
+        exit(1);
+    }
+    if (fread(config, sizeof(config), 1, file) != 1)
+    {
+        _perror("Could not read config from Model file\n");
+        exit(1);
+    }
+    int shared_weights = config->vocab_size > 0 ? 1 : 0;
+    config->vocab_size = abs(config->vocab_size);
+    fseek(file,0,SEEK_END);
+    *size = ftell(file);
+    fclose(file);
+
+    *fd = open(filename, O_RDONLY);
+    if (*fd == -1)
+    {
+        _perror("Could not open Model file\n");
+        exit(1);
+    }
+    *data = mmap(NULL, *size, PROT_READ, MAP_PRIVATE, *fd, 0);
+    if (*data == MAP_FAILED)
+    {
+        _perror("Could not mmap Model File\n");
+        exit(1);
+    }
+    float *weights_ptr = *data + sizeof(Config) / sizeof(float);
+    map_weights(weights, config, weights_ptr, shared_weights);
+}
+
+void model(Transformer *transformer, char *filename)
+{
+    read_model(filename,&transformer->config, &transformer->weights, &transformer->fd, &transformer->data, &transformer->size);
+    allocate_runstate(&transformer->runstate, &transformer->config);
+}
+
+void free_model(Transformer *transformer)
+{
+    if (transformer->data != MAP_FAILED)
+    {
+        munmap(transformer->data, transformer->size);
+    }
+    if (transformer->fd != -1)
+    {
+        close(transformer->fd);
+    }
+    free_runstate(&transformer->runstate);
+}
 
 int sample_argmax(float *prob, int argmax)
 {
@@ -421,58 +533,40 @@ long time_in_ms()
     return time.tv_sec * 1000 + time.tv_nsec / 1000000;
 }
 
-void bprintf(char *rbytes)
-{
-    if (rbytes == NULL)
-    {
-        return;
-    }
-    if (rbytes[0] == '\0')
-    {
-        return;
-    }
-    if (rbytes[1] == '\0')
-    {
-        unsigned char buf = rbytes[0];
-        if (!(isprint(buf) || isspace(buf)))
-        {
-            return;
-        }
-    }
-    printf(BWHITE"%s\n"BWHITE, rbytes);
-}
 
-int sample(Sampler *sampler, float *logits)
+int sample(Sampler *s, float *logits)
 {
     int next;
-    if (sampler->temperature == 0.0f)
+    if (s->temperature == 0.0f)
     {
-        next = sample_argmax(logits, sampler->vocab_size);
+        next = sample_argmax(logits, s->vocab_size);
     }else {
-        for (int q = 0; q < sampler->vocab_size; q++)
+        for (int q = 0; q < s->vocab_size; q++)
         {
-            logits[q] = sampler->temperature;
+            logits[q] = s->temperature;
         }
-        softmax(logits, sampler->vocab_size);
-        float coin = random_f32(&sampler->rng_state);
-        if (sampler->topp <= 0 || sampler->topp >= 1)
+        softmax(logits, s->vocab_size);
+        float coin = random_f32(&s->rng_state);
+        if (s->topp <= 0 || s->topp >= 1)
         {
-            next = sample_multinomial(logits, sampler->vocab_size, coin);
+            next = sample_multinomial(logits, s->vocab_size, coin);
         }else {
-            next = topp(logits, sampler->vocab_size, sampler->topp, sampler->probindex, coin);
+            next = topp(logits, s->vocab_size, s->topp, s->probindex, coin);
         }
     }
     return next;
 }
 
-void build_sampler(Sampler* sampler, int vocab_size, float temperature, float topp, unsigned long long rng_seed) {
-    sampler->vocab_size = vocab_size;
-    sampler->temperature = temperature;
-    sampler->topp = topp;
-    sampler->rng_state = rng_seed;
-    sampler->probindex = malloc(sampler->vocab_size * sizeof(ProbIndex));
+void sampler(Sampler* s, int vocab_size, float temperature, float topp, unsigned long long rng_seed) 
+{
+    s->vocab_size = vocab_size;
+    s->temperature = temperature;
+    s->topp = topp;
+    s->rng_state = rng_seed;
+    s->probindex = malloc(s->vocab_size * sizeof(ProbIndex));
 }
 
-void free_sampler(Sampler* sampler) {
-    free(sampler->probindex);
+void free_sampler(Sampler* s) 
+{
+    free(s->probindex);
 }

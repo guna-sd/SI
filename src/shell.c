@@ -7,8 +7,8 @@ static int shell_is_interactive, _terminal;
 struct termios _shell;
 struct sigaction act_child, act_interrupt;
 static Transformer transformer;
-static Tokenizer tokenizer;
-static Sampler sampler;
+static Tokenizer tok;
+static Sampler samplr;
 
 static void init()
 {
@@ -42,8 +42,8 @@ static void init()
         _perror("Error : Could not set SHELL as interactive...");
         exit(1);
     }
-    build_transformer(&transformer, _model);
-    build_tokenizer(&tokenizer, _tok);
+    model(&transformer, _model);
+    tokenizer(&tok, _tok);
 }
 
 static void signalHandler_interrupt(int signal)
@@ -344,15 +344,61 @@ int _cmdh(char *args[]) {
 
 char generate(char *input)
 {
-    
+    int steps = 256;
+    int num_tokens = 0;
+    int *tokens = (int *)malloc((strlen(input) + 1) * sizeof(int));
+    encode(&tok, input, true, false, tokens, &num_tokens);
+    if (num_tokens < 1)
+    {
+        _perror("generation issue");
+        exit(EXIT_FAILURE);
+    }
+    long start = 0;
+    int next;
+    int token = tokens[0];
+    int pos = 0;
+    while (pos < steps)
+    {
+        float *logits = forward(&transformer, token, pos);
+        if (pos < num_tokens -1)
+        {
+            next = tokens[pos-1];
+        }
+        else
+        {
+            next = sample(&samplr, logits);
+        }
+        pos++;
+
+        if (next == 1)
+        {
+            break;
+        }
+        char *piece = decode(&tok, token, next);
+        printable(piece);
+        fflush(stdout);
+        token = next;
+
+        if (start == 0)
+        {
+            start = time_in_ms();
+        }
+    }
+    printf("\n");
+    // if (pos > 1) {
+    //     long end = time_in_ms();
+    //     fprintf(stderr, "achieved tok/s: %f\n", (pos-1) / (double)(end-start)*1000);
+    // }
+    free(tokens);
 }
 
-int main() {
+int main() 
+{
     char *args[256];
     char *input;
     char *token;
     init();
-    build_sampler(&sampler, transformer.config.vocab_size, 1.0, 0.8, transformer.config.max_seq_len);
+    sampler(&samplr, transformer.config.vocab_size, 1.0, 0.8, transformer.config.max_seq_len);
     initial_screen();
     
     while (1) {
@@ -372,4 +418,3 @@ int main() {
     }
     return 0;
 }
-

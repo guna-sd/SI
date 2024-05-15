@@ -140,3 +140,24 @@ void _out() {
     printf(BRED"\nExiting...\n\n"RESET);
     exit(EXIT_SUCCESS);
 }
+
+void printable(char *rbytes)
+{
+    if (rbytes == NULL)
+    {
+        return;
+    }
+    if (rbytes[0] == '\0')
+    {
+        return;
+    }
+    if (rbytes[1] == '\0')
+    {
+        unsigned char buf = rbytes[0];
+        if (!(isprint(buf) || isspace(buf)))
+        {
+            return;
+        }
+    }
+    printf(BWHITE"%s\n"BWHITE, rbytes);
+}
