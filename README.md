@@ -49,7 +49,7 @@ guna@anug:[/home/guna/]$!> Configure the Linux firewall to allow all incoming TC
 guna@anug:[/home/guna/]$!> Generate a report of running processes.
 ```
 
-## Limitations
+> [!WARNING]
 
 While SI offers significant advantages in terms of usability and accessibility, it may have some limitations:
 
