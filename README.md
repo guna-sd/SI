@@ -50,8 +50,7 @@ guna@anug:[/home/guna/]$!> Generate a report of running processes.
 ```
 
 > [!WARNING]
-
-While SI offers significant advantages in terms of usability and accessibility, it may have some limitations:
+> While SI offers significant advantages in terms of usability and accessibility, it may have some limitations:
 
 - **Language Understanding**: SI's natural language processing capabilities may not be perfect, leading to occasional misinterpretations of commands.
 
