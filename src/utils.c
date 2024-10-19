@@ -1,5 +1,3 @@
-#include "../include/shell.h"
-
 static char currentDirectory[1024];
 static char inputbuffer[INPUT_SIZE];
 

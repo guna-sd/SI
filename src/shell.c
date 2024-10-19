@@ -1,420 +1,150 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <curl/curl.h>
+#include <jansson.h>
 
-#include "../include/shell.h"
+#define MAX_INPUT_SIZE 1024
 
-pid_t pid;
-static pid_t SHELL_PGID, SHELL_PID;
-static int shell_is_interactive, _terminal;
-struct termios _shell;
-struct sigaction act_child, act_interrupt;
-static Transformer transformer;
-static Tokenizer tok;
-static Sampler samplr;
+struct curl_buffer {
+    char *data;
+    size_t size;
+};
 
-static void init()
-{
-    _terminal = STDIN_FILENO;
-    shell_is_interactive = isatty(_terminal);
-    SHELL_PID = getpid();
-    if (shell_is_interactive)
-    {
-        while (tcgetpgrp(_terminal) != (SHELL_PGID=getpgrp()))
-            kill(SHELL_PID,SIGTTIN);
-
-        act_child.sa_handler = signalHandler_child;
-        act_interrupt.sa_handler = signalHandler_interrupt;
-
-        sigaction(SIGCHLD, &act_child, 0);
-        sigaction(SIGINT, &act_interrupt, 0);
-
-
-        setpgid(SHELL_PID, SHELL_PID);
-        SHELL_PGID = getpgrp();
-        if (SHELL_PID != SHELL_PGID)
-        {
-            _perror("Error, the shell is not process group leader");
-            exit(1);
-        }
-        tcsetpgrp(_terminal, SHELL_PGID);
-        tcgetattr(_terminal, &_shell);
+size_t write_callback(void *ptr, size_t size, size_t nmemb, struct curl_buffer *buffer) {
+    size_t total_size = size * nmemb;
+    char *new_data = realloc(buffer->data, buffer->size + total_size + 1);
+    if (new_data == NULL) {
+        fprintf(stderr, "Not enough memory to allocate buffer\n");
+        return 0;
     }
-    else 
-    {
-        _perror("Error : Could not set SHELL as interactive...");
+
+    buffer->data = new_data;
+    memcpy(&(buffer->data[buffer->size]), ptr, total_size);
+    buffer->size += total_size;
+    buffer->data[buffer->size] = '\0';
+    return total_size;
+}
+
+char *get_input() {
+    char *input = malloc(MAX_INPUT_SIZE);
+    if (!input) {
+        fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
-    model(&transformer, _model);
-    tokenizer(&tok, _tok);
+    printf("\e[1;92m%s@%s:\e[1;94m[%s]\e[1;97mS!> ", getlogin(), getenv("HOSTNAME"), getcwd(NULL, 0));
+    fgets(input, MAX_INPUT_SIZE, stdin);
+    input[strcspn(input, "\n")] = '\0';
+    return input;
 }
 
-static void signalHandler_interrupt(int signal)
-{
-    if (kill(pid, SIGTERM) == 0)
-    {
-        printf(BGREEN "Interrupted pid %d\n", pid);
-    }
-    else
-    {
-		printf("\n");
-    }
-}
+void ask_llm(const char *prompt) {
+    CURL *curl;
+    CURLcode res;
 
-static void signalHandler_child(int signal)
-{
-    while (waitpid(-1, NULL, WNOHANG) > 0) 
-    {
+    char json_payload[512];
+    snprintf(json_payload, sizeof(json_payload),
+             "{\"model\": \"SI\", \"prompt\": \"%s\"}", prompt);
 
-    }
-}
+    curl_global_init(CURL_GLOBAL_ALL);
+    curl = curl_easy_init();
+    if (curl) {
+        struct curl_slist *headers = NULL;
+        headers = curl_slist_append(headers, "Content-Type: application/json");
 
-int _cd(char *args[]) {
-    if (args[1] == NULL) {
-        if (chdir(getenv("HOME")) == -1) {
-            _perror("Error, could not change directory");
-            return CMD_FAILURE;
-        }
-        return CMD_SUCCESS;
-    } else {
-        if (chdir(args[1]) == -1) {
-            _perror("Error, No directory such directory...");
-            return CMD_FAILURE;
-        }
-        return CMD_SUCCESS;
-    }
-    return CMD_SUCCESS;
-}
+        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:11434/api/generate");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_payload);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
 
+        struct curl_buffer response_buffer;
+        response_buffer.data = malloc(1);
+        response_buffer.size = 0;
 
-void _exec(char **args)
-{
-    pid = fork();
-    if (pid == -1)
-    {
-        _perror("Error, could not fork child process not created...");
-        return;
-    }
-    if (pid == 0)
-    {
-        if (execvp(args[0], args) == -1)
-        {
-            _perror("Error, could not execute command...");
-            kill(getpid(), SIGTERM);
-        }
-    }
-    else
-    {
-        waitpid(pid, NULL, 0);
-    }
-    return;
-}
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_buffer);
 
-void _exec_bg(char **args) {
-    pid = fork();
-
-    if (pid == -1) {
-        _perror("Error, could not fork child process not created...");
-        return;
-    } else if (pid == 0) {
-        if (execvp(args[0], args) == -1) {
-            _perror("Error, could not execute command...");
-            exit(EXIT_FAILURE);
-        }
-    } else {
-        printf("Started background process with PID %d\n", pid);
-    }
-}
-
-void _io(char *args[], char *outputFile, int option) {
-    int fd;
-    pid_t pid = fork();
-    if (pid == -1) {
-        _perror("Error: fork failed");
-        return;
-    }
-    if (pid == 0) {
-        if (option == 0) {
-            fd = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
-        } else if (option == 1) {
-            fd = open(outputFile, O_CREAT | O_APPEND | O_WRONLY, 0600);
+        res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         } else {
-            fprintf(stderr, "Error: Invalid redirection type\n");
-            exit(EXIT_FAILURE);
-        }
-        if (fd == -1) {
-            perror("Error: failed to open output file");
-            exit(EXIT_FAILURE);
-        }
-        if (dup2(fd, STDOUT_FILENO) == -1) {
-            perror("Error: failed to redirect stdout");
-            exit(EXIT_FAILURE);
-        }
-        close(fd);
-        if (execvp(args[0], args) == -1) {
-            perror("Error: failed to execute command");
-            exit(EXIT_FAILURE);
-        }
-    } else {
-        waitpid(pid, NULL, 0);
-    }
-}
-void _pipe(char *args[]) {
-    int num_cmds = 0;
-    char *command[256];
-    int err = -1;
+            //printf("\e[1;93mRaw LLM Response: \e[1;97m%s\n", response_buffer.data);
 
-    for (int i = 0; args[i] != NULL; ++i) {
-        if (strcmp(args[i], "|") == 0) {
-            num_cmds++;
-        }
-    }
-    num_cmds++;
-
-    int pipe_fds[num_cmds - 1][2];
-
-    for (int i = 0, j = 0; args[j] != NULL; ++i) {
-        int k = 0;
-
-        while (args[j] != NULL && strcmp(args[j], "|") != 0) {
-            command[k++] = args[j++];
-        }
-        command[k] = NULL;
-
-        if (i < num_cmds - 1) {
-            if (pipe(pipe_fds[i]) == -1) {
-                _perror("pipe");
-                return;
-            }
-        }
-
-        pid = fork();
-        if (pid == -1) {
-            _perror("fork");
-            return;
-        }
-
-        if (pid == 0) {
-            if (i > 0) {
-                dup2(pipe_fds[i - 1][0], STDIN_FILENO);
-                close(pipe_fds[i - 1][0]);
-                close(pipe_fds[i - 1][1]);
-            }
-
-            if (i < num_cmds - 1) {
-                dup2(pipe_fds[i][1], STDOUT_FILENO);
-                close(pipe_fds[i][0]);
-                close(pipe_fds[i][1]);
-            }
-
-            if (execvp(command[0], command) == err) {
-                _perror("execvp");
-                exit(EXIT_FAILURE);
-            }
-        } else {
-            if (i > 0) {
-                close(pipe_fds[i - 1][0]);
-                close(pipe_fds[i - 1][1]);
-            }
-
-            while (args[j] != NULL && strcmp(args[j], "|") != 0) {
-                j++;
-            }
-
-            if (args[j] != NULL) {
-                j++;
-            }
-        }
-    }
-
-    for (int i = 0; i < num_cmds - 1; ++i) {
-        close(pipe_fds[i][0]);
-        close(pipe_fds[i][1]);
-    }
-
-    for (int i = 0; i < num_cmds; ++i) {
-        waitpid(pid, NULL, 0);
-    }
-}
-
-void _logical(char *args[]) {
-    int i = 0;
-    int status;
-
-    while (args[i] != NULL) {
-        int k = 0;
-        char *command[256];
-
-        while (args[i] != NULL && strcmp(args[i], "&&") != 0 && strcmp(args[i], "||") != 0) {
-            command[k++] = args[i++];
-        }
-        command[k] = NULL;
-
-        pid = fork();
-        if (pid == -1) {
-            _perror("Error: could not fork child process");
-            return;
-        }
-        if (pid == 0) {
-            if (execvp(command[0], command) == -1) {
-                _perror("Error: could not execute command");
-                exit(EXIT_FAILURE);
-            }
-        } else {
-            waitpid(pid, &status, 0);
-
-            if (args[i] != NULL) {
-                if (strcmp(args[i], "&&") == 0) {
-                    if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-                        break;
+            char *line = strtok(response_buffer.data, "\n");
+            while (line) {
+                json_error_t error;
+                json_t *root = json_loads(line, 0, &error);
+                if (!root) {
+                    fprintf(stderr, "Error parsing JSON: %s\n", error.text);
+                } else {
+                    json_t *response = json_object_get(root, "response");
+                    
+                    if (json_is_string(response)) {
+                        printf("%s", json_string_value(response));
                     }
-                } else if (strcmp(args[i], "||") == 0) {
-                    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-                        break;
-                    }
+
+                    json_decref(root);
                 }
-                i++;  
-            } else {
-                break;
+                line = strtok(NULL, "\n");
             }
+            printf("\n");
         }
+
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+        free(response_buffer.data);
     }
+    curl_global_cleanup();
 }
 
 
-int _cmdh(char *args[]) {
-    int i = 0, j = 0, background = 0;
-    char *args_aux[256];
 
-    while (args[i] != NULL) {
-        if (strcmp(args[i], "&") == 0 || strcmp(args[i], ">") == 0 || strcmp(args[i], ">>") == 0 || strcmp(args[i], "&&") == 0) {
-            break;
-        }
-        args_aux[i] = args[i];
-        i++;
+int handle_builtin_commands(char *input) {
+    if (strcmp(input, "exit") == 0) {
+        printf("Exiting shell\n");
+        return 1;
     }
 
-    if (strcmp(args[0], "exit") == 0) {
-        _out();
-    } else if (strcmp(args[0], "cd") == 0) {
-        _cd(args);
-    } else if (strcmp(args[0], "history") == 0) {
-        _history();
-    } else if (strcmp(args[0], "clear") == 0) {
-        if(system("clear")) printf("\n");
-    } else if (strcmp(args[0], "help") == 0) {
-        _help();
-    } else {
-        while (args[j] != NULL && background == 0) {
-            if (strcmp(args[j], "&") == 0) {
-                background = 1;
-                break;
-            } else if (strcmp(args[j], "|") == 0) {
-                _pipe(args);
-                return CMD_SUCCESS;
-            } else if (strcmp(args[j], "||") == 0) {
-                _logical(args);
-                return CMD_SUCCESS;
-            } else if (strcmp(args[j], "&&") == 0) {
-                _logical(args);
-                return CMD_SUCCESS;
-            } else if (strcmp(args[j], ">") == 0) {
-                if (args[j + 1] == NULL) {
-                    printf("Not enough input arguments\n");
-                    return -1;
-                }
-                _io(args_aux, args[j + 1], 0);
-                return 1;
-            } else if (strcmp(args[j], ">>") == 0) {
-                if (args[j + 1] == NULL) {
-                    printf("Not enough input arguments\n");
-                    return -1;
-                }
-                _io(args_aux, args[j + 1], 1);
-                return 1;
-            }
-            j++;
+    if (strcmp(input, "help") == 0) {
+        printf("Builtin commands:\n");
+        printf("  cd [directory] - Change the current directory\n");
+        printf("  exit - Exit the shell\n");
+        printf("  help - Show this help message\n");
+        return 0;
         }
-        args_aux[j] = NULL;
-        if (background == 1) {
-            _exec_bg(args_aux);
+
+    if (strncmp(input, "cd", 2) == 0) {
+        char *dir = strtok(input + 3, " ");
+        if (dir == NULL || strlen(dir) == 0) {
+            chdir(getenv("HOME"));
         } else {
-            _exec(args_aux);
+            if (chdir(dir) != 0) {
+                perror("cd");
+            }
         }
+        return 0;
     }
-    return CMD_SUCCESS;
+
+    return -1;
 }
 
-char generate(char *input)
-{
-    int steps = 256;
-    int num_tokens = 0;
-    int *tokens = (int *)malloc((strlen(input) + 1) * sizeof(int));
-    encode(&tok, input, true, false, tokens, &num_tokens);
-    if (num_tokens < 1)
-    {
-        _perror("generation issue");
-        exit(EXIT_FAILURE);
-    }
-    long start = 0;
-    int next;
-    int token = tokens[0];
-    int pos = 0;
-    while (pos < steps)
-    {
-        float *logits = forward(&transformer, token, pos);
-        if (pos < num_tokens -1)
-        {
-            next = tokens[pos-1];
-        }
-        else
-        {
-            next = sample(&samplr, logits);
-        }
-        pos++;
-
-        if (next == 1)
-        {
-            break;
-        }
-        char *piece = decode(&tok, token, next);
-        printable(piece);
-        fflush(stdout);
-        token = next;
-
-        if (start == 0)
-        {
-            start = time_in_ms();
-        }
-    }
-    printf("\n");
-    // if (pos > 1) {
-    //     long end = time_in_ms();
-    //     fprintf(stderr, "achieved tok/s: %f\n", (pos-1) / (double)(end-start)*1000);
-    // }
-    free(tokens);
-}
-
-int main() 
-{
-    char *args[256];
-    char *input;
-    char *token;
-    init();
-    sampler(&samplr, transformer.config.vocab_size, 1.0, 0.8, transformer.config.max_seq_len);
-    initial_screen();
-    
+int main() {
     while (1) {
-        prompt();
-        input = _input();
-        
-        token = strtok(input, " \t\n");
-        int i = 0;
-        while (token != NULL) {
-            args[i++] = token;
-            token = strtok(NULL, " \t\n");
+        char *input = get_input();
+
+        int builtin_status = handle_builtin_commands(input);
+        if (builtin_status == 1) {
+            free(input);
+            break;
+        } else if (builtin_status == 0) {
+            free(input);
+            continue;
         }
-        args[i] = NULL;
-        if (args[0] != NULL) {
-            _cmdh(args);
-        }
+
+        ask_llm(input);
+
+        free(input);
     }
+
     return 0;
 }
