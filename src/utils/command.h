@@ -55,8 +55,9 @@ public:
                     error_msg = "Execvp failed: " + std::string(strerror(errno));
                     exit(1); 
                 }
-                else
-                {
+            }
+            else
+            {
                     int status;
                     waitpid(pid, &status, 0);
                     if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
@@ -64,7 +65,6 @@ public:
                         is_error = true;
                         error_msg = "Command exited with status: " + std::to_string(WEXITSTATUS(status));
                     }
-                }
             }
         }
     }
@@ -77,7 +77,7 @@ public:
         }
         return result;
     }
-    bool hasError() const { return is_error.value_or(false); }
+    bool hasError() const { return is_error; }
     std::optional<std::string> getErrorMessage() const { return error_msg; }
     std::string getCommand() const { return command; }
     std::vector<std::string> getArguments() const { return arguments; }
@@ -87,10 +87,8 @@ private:
     std::string command;
     std::vector<std::string> arguments;
     std::function<void(const std::string&, const std::vector<std::string>&)> BuiltinFunction;
-    std::bool is_executed;
-    std::bool is_error;
+    bool is_executed;
+    bool is_error;
     std::optional<std::string> error_msg;
-
-}
-///home/guna/Projects/SI/src/utils/command.h
+};
 #endif
